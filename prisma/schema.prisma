@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id               String   @id @default(cuid())
+  nome             String
+  cnpj             String?  @unique
+  contatoPrincipal String?
+  ativo            Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relacionamentos
+  users             User[]
+  servers           Server[]
+  workstations      Workstation[]
+  backupJobs        BackupJob[]
+  alerts            Alert[]
+  integrationConfigs IntegrationConfig[]
+
+  @@map("tenants")
+}
+
+enum UserRole {
+  MAGINF_ADMIN
+  CLIENTE_ADMIN
+  CLIENTE_USER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  role      UserRole
+  tenantId  String?
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@map("users")
+}
+
+enum ServerStatus {
+  ONLINE
+  OFFLINE
+  ALERTA
+}
+
+model Server {
+  id                String       @id @default(cuid())
+  tenantId          String
+  nome              String
+  ip                String
+  sistemaOperacional String?
+  status            ServerStatus @default(OFFLINE)
+  cpuUsoPercent     Float?
+  memoriaUsoPercent Float?
+  discoUsoPercent   Float?
+  ultimoCheckEm     DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  // Relacionamentos
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("servers")
+}
+
+enum WorkstationStatus {
+  ONLINE
+  OFFLINE
+  ALERTA
+}
+
+model Workstation {
+  id                  String            @id @default(cuid())
+  tenantId            String
+  nome                String
+  usuarioResponsavel  String?
+  ip                  String?
+  status              WorkstationStatus @default(OFFLINE)
+  ultimoCheckEm       DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  // Relacionamentos
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("workstations")
+}
+
+enum BackupJobStatus {
+  SUCESSO
+  FALHA
+  EM_ANDAMENTO
+}
+
+enum BackupTipoAlvo {
+  SERVIDOR
+  ESTACAO
+}
+
+model BackupJob {
+  id                        String            @id @default(cuid())
+  tenantId                  String
+  nome                      String
+  tipoAlvo                  BackupTipoAlvo
+  alvoId                    String // ID do servidor ou estação
+  provedor                  String            @default("MOCK") // COVE, VEEAM, etc.
+  ultimaExecucaoEm          DateTime?
+  ultimaExecucaoStatus      BackupJobStatus?
+  tamanhoUltimoBackupGB     Float?
+  retencaoDias              Int               @default(30)
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+
+  // Relacionamentos
+  tenant Tenant  @relation(fields: [tenantId], references: [id])
+  alerts Alert[]
+
+  @@map("backup_jobs")
+}
+
+enum AlertTipo {
+  CPU_ALTA
+  MEMORIA_ALTA
+  DISCO_CHEIO
+  BACKUP_FALHO
+  SERVIDOR_OFFLINE
+  ESTACAO_OFFLINE
+  OUTRO
+}
+
+enum AlertSeveridade {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertOrigem {
+  SERVIDOR
+  ESTACAO
+  BACKUP
+}
+
+model Alert {
+  id          String           @id @default(cuid())
+  tenantId    String
+  tipo        AlertTipo
+  severidade  AlertSeveridade
+  mensagem    String
+  origem      AlertOrigem
+  origemId    String // ID do servidor, estação ou backup job
+  resolvido   Boolean          @default(false)
+  resolvidoEm DateTime?
+  criadoEm    DateTime         @default(now())
+
+  // Relacionamentos
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  backupJob BackupJob? @relation(fields: [origemId], references: [id])
+
+  @@map("alerts")
+}
+
+enum IntegrationTipo {
+  MONITORING
+  BACKUP
+}
+
+model IntegrationConfig {
+  id           String          @id @default(cuid())
+  tenantId     String
+  tipo         IntegrationTipo
+  provedor     String // SITE24X7, COVE, ZABBIX, etc.
+  apiKey       String? // Criptografado
+  endpointBase String?
+  ativo        Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  // Relacionamentos
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("integration_configs")
+}
