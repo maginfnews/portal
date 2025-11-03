@@ -32,6 +32,20 @@ async function main() {
     },
   })
 
+  // Criar usuário Maicon da Maginf
+  const hashedPasswordMaicon = await bcrypt.hash('mag1234', 10)
+  const maiconUser = await prisma.user.upsert({
+    where: { email: 'maicon@maginf.com.br' },
+    update: {},
+    create: {
+      nome: 'Maicon Maginf',
+      email: 'maicon@maginf.com.br',
+      senhaHash: hashedPasswordMaicon,
+      role: 'MAGINF_ADMIN',
+      ativo: true,
+    },
+  })
+
   // Criar usuário admin do cliente
   const hashedPasswordClient = await bcrypt.hash('cliente123', 10)
   const clientAdminUser = await prisma.user.upsert({
@@ -186,7 +200,7 @@ async function main() {
         severidade: 'WARNING',
         mensagem: 'CPU do servidor SRV-DB-01 está em 85%',
         origem: 'SERVIDOR',
-        origemId: servers[1].id,
+        origemId: 'srv-db-01',
         criadoEm: new Date(),
       },
     }),
@@ -197,7 +211,7 @@ async function main() {
         severidade: 'CRITICAL',
         mensagem: 'Memória do servidor SRV-DB-01 está em 92%',
         origem: 'SERVIDOR',
-        origemId: servers[1].id,
+        origemId: 'srv-db-01',
         criadoEm: new Date(),
       },
     }),
@@ -208,7 +222,7 @@ async function main() {
         severidade: 'CRITICAL',
         mensagem: 'Servidor SRV-FILE-01 está offline há 30 minutos',
         origem: 'SERVIDOR',
-        origemId: servers[2].id,
+        origemId: 'srv-file-01',
         criadoEm: new Date(Date.now() - 30 * 60 * 1000),
       },
     }),
@@ -239,6 +253,7 @@ async function main() {
 
   console.log('✅ Seed concluído com sucesso!')
   console.log(`👤 Admin Maginf: admin@maginf.com.br / admin123`)
+  console.log(`👤 Maicon Maginf: maicon@maginf.com.br / mag1234`)
   console.log(`👤 Admin Cliente: admin@techcorp.com.br / cliente123`)
   console.log(`👤 Usuário Cliente: user@techcorp.com.br / cliente123`)
 }

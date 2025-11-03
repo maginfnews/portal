@@ -104,6 +104,7 @@ export default function LoginPage() {
             <p className="mb-2">Credenciais de teste:</p>
             <div className="space-y-1 text-xs bg-gray-50 p-3 rounded-md">
               <p><strong>Admin Maginf:</strong> admin@maginf.com.br / admin123</p>
+              <p><strong>Maicon Maginf:</strong> maicon@maginf.com.br / mag1234</p>
               <p><strong>Admin Cliente:</strong> admin@techcorp.com.br / cliente123</p>
               <p><strong>Usuário Cliente:</strong> user@techcorp.com.br / cliente123</p>
             </div>

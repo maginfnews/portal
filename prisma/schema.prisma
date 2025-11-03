@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Tenant {
@@ -30,18 +30,12 @@ model Tenant {
   @@map("tenants")
 }
 
-enum UserRole {
-  MAGINF_ADMIN
-  CLIENTE_ADMIN
-  CLIENTE_USER
-}
-
 model User {
   id        String   @id @default(cuid())
   nome      String
   email     String   @unique
   senhaHash String
-  role      UserRole
+  role      String   // MAGINF_ADMIN, CLIENTE_ADMIN, CLIENTE_USER
   tenantId  String?
   ativo     Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -53,25 +47,19 @@ model User {
   @@map("users")
 }
 
-enum ServerStatus {
-  ONLINE
-  OFFLINE
-  ALERTA
-}
-
 model Server {
-  id                String       @id @default(cuid())
+  id                String   @id @default(cuid())
   tenantId          String
   nome              String
   ip                String
   sistemaOperacional String?
-  status            ServerStatus @default(OFFLINE)
+  status            String   @default("OFFLINE") // ONLINE, OFFLINE, ALERTA
   cpuUsoPercent     Float?
   memoriaUsoPercent Float?
   discoUsoPercent   Float?
   ultimoCheckEm     DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relacionamentos
   tenant Tenant @relation(fields: [tenantId], references: [id])
@@ -79,22 +67,16 @@ model Server {
   @@map("servers")
 }
 
-enum WorkstationStatus {
-  ONLINE
-  OFFLINE
-  ALERTA
-}
-
 model Workstation {
-  id                  String            @id @default(cuid())
+  id                  String   @id @default(cuid())
   tenantId            String
   nome                String
   usuarioResponsavel  String?
   ip                  String?
-  status              WorkstationStatus @default(OFFLINE)
+  status              String   @default("OFFLINE") // ONLINE, OFFLINE, ALERTA
   ultimoCheckEm       DateTime?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   // Relacionamentos
   tenant Tenant @relation(fields: [tenantId], references: [id])
@@ -102,94 +84,54 @@ model Workstation {
   @@map("workstations")
 }
 
-enum BackupJobStatus {
-  SUCESSO
-  FALHA
-  EM_ANDAMENTO
-}
-
-enum BackupTipoAlvo {
-  SERVIDOR
-  ESTACAO
-}
-
 model BackupJob {
-  id                        String            @id @default(cuid())
+  id                        String   @id @default(cuid())
   tenantId                  String
   nome                      String
-  tipoAlvo                  BackupTipoAlvo
-  alvoId                    String // ID do servidor ou estação
-  provedor                  String            @default("MOCK") // COVE, VEEAM, etc.
+  tipoAlvo                  String   // SERVIDOR, ESTACAO
+  alvoId                    String   // ID do servidor ou estação
+  provedor                  String   @default("MOCK") // COVE, VEEAM, etc.
   ultimaExecucaoEm          DateTime?
-  ultimaExecucaoStatus      BackupJobStatus?
+  ultimaExecucaoStatus      String?  // SUCESSO, FALHA, EM_ANDAMENTO
   tamanhoUltimoBackupGB     Float?
-  retencaoDias              Int               @default(30)
-  createdAt                 DateTime          @default(now())
-  updatedAt                 DateTime          @updatedAt
+  retencaoDias              Int      @default(30)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
 
   // Relacionamentos
-  tenant Tenant  @relation(fields: [tenantId], references: [id])
-  alerts Alert[]
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@map("backup_jobs")
 }
 
-enum AlertTipo {
-  CPU_ALTA
-  MEMORIA_ALTA
-  DISCO_CHEIO
-  BACKUP_FALHO
-  SERVIDOR_OFFLINE
-  ESTACAO_OFFLINE
-  OUTRO
-}
-
-enum AlertSeveridade {
-  INFO
-  WARNING
-  CRITICAL
-}
-
-enum AlertOrigem {
-  SERVIDOR
-  ESTACAO
-  BACKUP
-}
-
 model Alert {
-  id          String           @id @default(cuid())
+  id          String   @id @default(cuid())
   tenantId    String
-  tipo        AlertTipo
-  severidade  AlertSeveridade
+  tipo        String   // CPU_ALTA, MEMORIA_ALTA, DISCO_CHEIO, BACKUP_FALHO, SERVIDOR_OFFLINE, ESTACAO_OFFLINE, OUTRO
+  severidade  String   // INFO, WARNING, CRITICAL
   mensagem    String
-  origem      AlertOrigem
-  origemId    String // ID do servidor, estação ou backup job
-  resolvido   Boolean          @default(false)
+  origem      String   // SERVIDOR, ESTACAO, BACKUP
+  origemId    String   // ID do servidor, estação ou backup job
+  resolvido   Boolean  @default(false)
   resolvidoEm DateTime?
-  criadoEm    DateTime         @default(now())
+  criadoEm    DateTime @default(now())
 
   // Relacionamentos
-  tenant    Tenant     @relation(fields: [tenantId], references: [id])
-  backupJob BackupJob? @relation(fields: [origemId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@map("alerts")
 }
 
-enum IntegrationTipo {
-  MONITORING
-  BACKUP
-}
-
 model IntegrationConfig {
-  id           String          @id @default(cuid())
+  id           String   @id @default(cuid())
   tenantId     String
-  tipo         IntegrationTipo
-  provedor     String // SITE24X7, COVE, ZABBIX, etc.
-  apiKey       String? // Criptografado
+  tipo         String   // MONITORING, BACKUP
+  provedor     String   // SITE24X7, COVE, ZABBIX, etc.
+  apiKey       String?  // Criptografado
   endpointBase String?
-  ativo        Boolean         @default(true)
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  ativo        Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relacionamentos
   tenant Tenant @relation(fields: [tenantId], references: [id])

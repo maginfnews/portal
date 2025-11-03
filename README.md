@@ -71,6 +71,7 @@ O projeto estará disponível em `http://localhost:3000`
 ## 👥 Credenciais de Teste
 
 - **Admin Maginf**: `admin@maginf.com.br` / `admin123`
+- **Maicon Maginf**: `maicon@maginf.com.br` / `mag1234`
 - **Admin Cliente**: `admin@techcorp.com.br` / `cliente123`  
 - **Usuário Cliente**: `user@techcorp.com.br` / `cliente123`
 
