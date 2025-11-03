@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-export default function LoginPage() {
+export default function LoginNextAuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -55,15 +55,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-maginf-orange to-maginf-orange-dark flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 bg-maginf-orange rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-xl">M</span>
+          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl font-bold text-maginf-orange">M</span>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
-            Maginf Tecnologia
+            Portal Maginf
           </CardTitle>
-          <CardDescription className="text-maginf-gray">
-            Monitoramento e cuidado com o seu ambiente de TI
-          </CardDescription>
+          <p className="text-maginf-gray">
+            Faça login para acessar o portal
+          </p>
         </CardHeader>
         <CardContent>
           {/* Login com Google */}
@@ -122,7 +122,7 @@ export default function LoginPage() {
               />
             </div>
             {error && (
-              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+              <div className="text-red-600 text-sm text-center">
                 {error}
               </div>
             )}

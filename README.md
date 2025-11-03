@@ -125,19 +125,52 @@ Atualmente usa providers mock, mas pode ser facilmente substituído por integra�
 - Veeam
 - Outros
 
-## 🚀 Deploy
+## 🚀 Deploy no Vercel
 
-### Preparação
+### 1. Preparação
 ```bash
-npm run build
+# Clone o repositório
+git clone https://github.com/seu-usuario/portal-maginf.git
+cd portal-maginf
+
+# Instale as dependências
+npm install
+
+# Configure o banco de dados
+npx prisma db push
+npx prisma db seed
 ```
 
-### Variáveis de Ambiente (Produção)
+### 2. Deploy no Vercel
+1. **Conecte o repositório** ao Vercel
+2. **Configure as variáveis de ambiente** (veja seção abaixo)
+3. **Deploy automático** a cada push na branch main
+
+### 3. Variáveis de Ambiente para Produção
+
+No painel do Vercel, configure:
+
 ```bash
-DATABASE_URL="postgresql://..."
-JWT_SECRET="sua-chave-super-secreta"
+# Database (PostgreSQL recomendado para produção)
+DATABASE_URL="postgresql://username:password@host:5432/database"
+
+# NextAuth
 NEXTAUTH_URL="https://portal.maginf.com.br"
+NEXTAUTH_SECRET="sua-chave-super-secreta-nextauth"
+
+# Google OAuth (opcional)
+GOOGLE_CLIENT_ID="123456789-abc.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="GOCSPX-abcdefghijk"
+
+# JWT (compatibilidade)
+JWT_SECRET="sua-chave-super-secreta-jwt"
 ```
+
+### 4. Configuração Google OAuth para Produção
+
+No Google Cloud Console, adicione:
+- **Authorized JavaScript origins**: `https://portal.maginf.com.br`
+- **Authorized redirect URIs**: `https://portal.maginf.com.br/api/auth/callback/google`
 
 ## 📈 Próximos Passos
 

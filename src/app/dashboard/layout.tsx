@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { 
   LayoutDashboard, 
@@ -16,55 +17,45 @@ import {
   X
 } from 'lucide-react'
 
-interface User {
-  id: string
-  nome: string
-  email: string
-  role: string
-  tenant?: {
-    id: string
-    nome: string
-  }
-}
-
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [user, setUser] = useState<User | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
-    fetchUser()
-  }, [])
-
-  const fetchUser = async () => {
-    try {
-      const response = await fetch('/api/me')
-      if (response.ok) {
-        const data = await response.json()
-        setUser(data.data.user)
-      } else {
-        router.push('/login')
-      }
-    } catch (error) {
-      console.error('Erro ao buscar usuário:', error)
+    if (status === 'loading') return // Ainda carregando
+    
+    if (!session) {
       router.push('/login')
-    } finally {
-      setIsLoading(false)
+      return
     }
-  }
+  }, [session, status, router])
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      router.push('/login')
+      await signOut({ 
+        callbackUrl: '/login',
+        redirect: true 
+      })
     } catch (error) {
       console.error('Erro no logout:', error)
     }
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Carregando...</div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return null // Será redirecionado
   }
 
   const menuItems = [
@@ -77,16 +68,7 @@ export default function DashboardLayout({
     { icon: Settings, label: 'Configurações', href: '/dashboard/configuracoes' },
   ]
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-maginf-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-maginf-gray">Carregando...</p>
-        </div>
-      </div>
-    )
-  }
+  const user = session?.user
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,8 +99,8 @@ export default function DashboardLayout({
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{user?.nome}</p>
-                <p className="text-xs text-maginf-gray">{user?.role.replace('_', ' ')}</p>
+                <p className="text-sm font-medium text-gray-900">{user?.name || user?.email}</p>
+                <p className="text-xs text-maginf-gray">{user?.role?.replace('_', ' ')}</p>
               </div>
               <Button
                 variant="ghost"

@@ -1,42 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from './lib/auth'
+import { withAuth } from 'next-auth/middleware'
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+export default withAuth(
+  function middleware(req) {
+    console.log(`[MIDDLEWARE] Usuário autenticado acessando: ${req.nextUrl.pathname}`)
+    console.log(`[MIDDLEWARE] Token:`, req.nextauth.token?.email)
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        const { pathname } = req.nextUrl
+        console.log(`[MIDDLEWARE AUTH] Verificando: ${pathname}`)
+        console.log(`[MIDDLEWARE AUTH] Token presente: ${!!token}`)
+        
+        // Rotas públicas
+        const publicRoutes = ['/', '/login', '/login-nextauth', '/debug', '/test-db', '/status', '/test-login', '/test-session']
+        if (publicRoutes.includes(pathname)) {
+          console.log(`[MIDDLEWARE AUTH] Rota pública permitida: ${pathname}`)
+          return true
+        }
 
-  // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/', '/login', '/api/auth/login']
-  
-  if (publicRoutes.includes(pathname)) {
-    return NextResponse.next()
-  }
+        // Rotas da API (todas públicas por enquanto)
+        if (pathname.startsWith('/api/')) {
+          console.log(`[MIDDLEWARE AUTH] API route permitida: ${pathname}`)
+          return true
+        }
 
-  // Verificar token para rotas protegidas
-  const token = request.cookies.get('auth-token')?.value
-
-  if (!token) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  const payload = verifyToken(token)
-  if (!payload) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // Adicionar informações do usuário nos headers para as API routes
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-user-id', payload.userId)
-  requestHeaders.set('x-user-role', payload.role)
-  if (payload.tenantId) {
-    requestHeaders.set('x-tenant-id', payload.tenantId)
-  }
-
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
+        // Outras rotas precisam de autenticação
+        const authorized = !!token
+        console.log(`[MIDDLEWARE AUTH] Autorizado: ${authorized}`)
+        return authorized
+      },
     },
-  })
-}
+    pages: {
+      signIn: '/login',
+    },
+  }
+)
 
 export const config = {
   matcher: [

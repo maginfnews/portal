@@ -10,9 +10,13 @@ const loginSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('[LOGIN API] Body recebido:', body)
+    
     const { email, password } = loginSchema.parse(body)
+    console.log('[LOGIN API] Dados validados:', { email, password: '***' })
 
     const user = await authenticateUser(email, password)
+    console.log('[LOGIN API] Usuário encontrado:', !!user)
     
     if (!user) {
       return NextResponse.json(
@@ -45,9 +49,18 @@ export async function POST(request: NextRequest) {
     // Definir cookie httpOnly para o token
     response.cookies.set('auth-token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Forçar false para desenvolvimento local
       sameSite: 'lax',
+      path: '/',
       maxAge: 60 * 60 * 24, // 24 horas
+      domain: 'localhost', // Especificar domínio para localhost
+    })
+    
+    console.log('[LOGIN API] Cookie definido com sucesso:', {
+      token: token.substring(0, 20) + '...',
+      domain: 'localhost',
+      path: '/',
+      secure: false
     })
 
     return response

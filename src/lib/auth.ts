@@ -40,13 +40,19 @@ export function generateToken(payload: JWTPayload): string {
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload
-  } catch {
+    console.log(`[VERIFY_TOKEN] Verificando token com JWT_SECRET: ${JWT_SECRET?.substring(0, 10)}...`)
+    const payload = jwt.verify(token, JWT_SECRET) as JWTPayload
+    console.log(`[VERIFY_TOKEN] Token decodificado com sucesso: ${payload.email}`)
+    return payload
+  } catch (error) {
+    console.log(`[VERIFY_TOKEN] Erro ao verificar token:`, error)
     return null
   }
 }
 
 export async function authenticateUser(email: string, password: string): Promise<AuthUser | null> {
+  console.log(`[AUTH] Tentando autenticar: ${email}`)
+  
   const user = await prisma.user.findUnique({
     where: { email },
     include: {
@@ -59,11 +65,16 @@ export async function authenticateUser(email: string, password: string): Promise
     },
   })
 
+  console.log(`[AUTH] Usuário encontrado: ${!!user}`)
   if (!user || !user.ativo) {
+    console.log(`[AUTH] Usuário não encontrado ou inativo`)
     return null
   }
 
+  console.log(`[AUTH] Verificando senha...`)
   const isValidPassword = await verifyPassword(password, user.senhaHash)
+  console.log(`[AUTH] Senha válida: ${isValidPassword}`)
+  
   if (!isValidPassword) {
     return null
   }
@@ -72,7 +83,7 @@ export async function authenticateUser(email: string, password: string): Promise
     id: user.id,
     nome: user.nome,
     email: user.email,
-    role: user.role,
+    role: user.role as UserRole,
     tenantId: user.tenantId || undefined,
     tenant: user.tenant || undefined,
   }
@@ -104,7 +115,7 @@ export async function getUserFromToken(token: string): Promise<AuthUser | null> 
     id: user.id,
     nome: user.nome,
     email: user.email,
-    role: user.role,
+    role: user.role as UserRole,
     tenantId: user.tenantId || undefined,
     tenant: user.tenant || undefined,
   }

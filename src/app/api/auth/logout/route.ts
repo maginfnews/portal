@@ -6,10 +6,14 @@ export async function POST() {
   // Remover o cookie de autenticação
   response.cookies.set('auth-token', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false,
     sameSite: 'lax',
+    path: '/',
+    domain: 'localhost',
     maxAge: 0,
   })
+  
+  console.log('[LOGOUT API] Cookie removido com sucesso')
 
   return response
 }
