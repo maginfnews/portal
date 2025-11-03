@@ -11,7 +11,12 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma db push && next build"
+    "vercel-build": "prisma generate && prisma db push && next build",
+    "deploy": "powershell -ExecutionPolicy Bypass -File scripts/deploy-simple.ps1",
+    "deploy:full": "powershell -ExecutionPolicy Bypass -File scripts/full-deploy.ps1",
+    "deploy:quick": "powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1",
+    "setup:db": "powershell -ExecutionPolicy Bypass -File scripts/setup-database.ps1",
+    "setup:oauth": "powershell -ExecutionPolicy Bypass -File scripts/setup-oauth.ps1"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
