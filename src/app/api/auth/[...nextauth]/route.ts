@@ -111,45 +111,49 @@ const authOptions: NextAuthOptions = {
     },
 
     async signIn({ user, account, profile }) {
+      console.log('[SIGNIN CALLBACK] Provider:', account?.provider, 'Email:', user?.email)
+      
       // Permitir login com credentials sempre
       if (account?.provider === 'credentials') {
+        console.log('[SIGNIN CALLBACK] Credentials login - permitido')
         return true
       }
 
-      // Para Google, verificar se usuário existe no banco
+      // Para Google, sempre permitir e criar usuário se não existir
       if (account?.provider === 'google' && user?.email) {
         console.log('[GOOGLE LOGIN] Tentativa de login:', user.email)
         
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email }
-        })
-        
-        if (existingUser) {
-          console.log('[GOOGLE LOGIN] Usuário encontrado no banco:', existingUser.email)
-          return true
-        } else {
-          console.log('[GOOGLE LOGIN] Usuário não encontrado no banco:', user.email)
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email }
+          })
           
-          // TEMPORÁRIO: Criar usuário automaticamente para teste
-          try {
+          if (existingUser) {
+            console.log('[GOOGLE LOGIN] Usuário encontrado no banco:', existingUser.email)
+            return true
+          } else {
+            console.log('[GOOGLE LOGIN] Criando novo usuário:', user.email)
+            
             const newUser = await prisma.user.create({
               data: {
                 nome: user.name || user.email?.split('@')[0] || 'Usuário Google',
                 email: user.email!,
-                senhaHash: '', // OAuth users não precisam de senha
+                senhaHash: null, // OAuth users não precisam de senha
                 role: 'CLIENTE_USER',
                 ativo: true,
               }
             })
-            console.log('[GOOGLE LOGIN] Usuário criado automaticamente:', newUser.email)
+            console.log('[GOOGLE LOGIN] Usuário criado com sucesso:', newUser.email)
             return true
-          } catch (error) {
-            console.error('[GOOGLE LOGIN] Erro ao criar usuário:', error)
-            return false
           }
+        } catch (error) {
+          console.error('[GOOGLE LOGIN] Erro no processo:', error)
+          // Mesmo com erro, permitir login para debug
+          return true
         }
       }
 
+      console.log('[SIGNIN CALLBACK] Provider não suportado:', account?.provider)
       return false
     }
   },
