@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from 'react'
 
+interface DebugInfo {
+  [key: string]: any
+}
+
 export default function DebugPage() {
-  const [info, setInfo] = useState<any>({})
+  const [info, setInfo] = useState<DebugInfo>({})
 
   useEffect(() => {
     const debugInfo = {
@@ -20,10 +24,10 @@ export default function DebugPage() {
     fetch('/api/me')
       .then(res => res.json())
       .then(data => {
-        setInfo(prev => ({ ...prev, authStatus: data }))
+        setInfo((prev: DebugInfo) => ({ ...prev, authStatus: data }))
       })
       .catch(err => {
-        setInfo(prev => ({ ...prev, authError: err.message }))
+        setInfo((prev: DebugInfo) => ({ ...prev, authError: err.message }))
       })
   }, [])
 
@@ -41,9 +45,9 @@ export default function DebugPage() {
       })
       
       const data = await response.json()
-      setInfo(prev => ({ ...prev, loginTest: { status: response.status, data } }))
+      setInfo((prev: DebugInfo) => ({ ...prev, loginTest: { status: response.status, data } }))
     } catch (error) {
-      setInfo(prev => ({ ...prev, loginError: error }))
+      setInfo((prev: DebugInfo) => ({ ...prev, loginError: error }))
     }
   }
 
