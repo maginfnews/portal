@@ -72,6 +72,13 @@ export async function authenticateUser(email: string, password: string): Promise
   }
 
   console.log(`[AUTH] Verificando senha...`)
+  
+  // Verificar se o usuário tem senha hash (usuários OAuth podem não ter)
+  if (!user.senhaHash) {
+    console.log(`[AUTH] Usuário sem senha hash (OAuth user)`)
+    return null
+  }
+  
   const isValidPassword = await verifyPassword(password, user.senhaHash)
   console.log(`[AUTH] Senha válida: ${isValidPassword}`)
   

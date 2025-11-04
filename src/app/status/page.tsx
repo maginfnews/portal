@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from 'react'
 
+interface StatusInfo {
+  [key: string]: any
+}
+
 export default function StatusPage() {
-  const [status, setStatus] = useState<any>({})
+  const [status, setStatus] = useState<StatusInfo>({})
 
   useEffect(() => {
     checkStatus()
@@ -15,7 +19,7 @@ export default function StatusPage() {
       const meResponse = await fetch('/api/me')
       const meData = await meResponse.json()
       
-      setStatus(prev => ({
+      setStatus((prev: StatusInfo) => ({
         ...prev,
         currentAuth: {
           status: meResponse.status,
@@ -25,7 +29,7 @@ export default function StatusPage() {
 
       // Testar acesso ao dashboard
       const dashResponse = await fetch('/dashboard')
-      setStatus(prev => ({
+      setStatus((prev: StatusInfo) => ({
         ...prev,
         dashboardAccess: {
           status: dashResponse.status,
@@ -34,9 +38,9 @@ export default function StatusPage() {
       }))
 
     } catch (error) {
-      setStatus(prev => ({
+      setStatus((prev: StatusInfo) => ({
         ...prev,
-        error: error.message
+        error: (error as Error).message
       }))
     }
   }

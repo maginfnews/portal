@@ -77,7 +77,7 @@ export default function TestLoginPage() {
     } catch (error) {
       console.error('Erro no teste:', error)
       setResult({
-        error: error.message
+        error: (error as Error).message
       })
     } finally {
       setLoading(false)
